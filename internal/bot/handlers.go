@@ -9,6 +9,7 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/download"
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/rss"
 )
 
 func start(msg *tgbotapi.Message) {
@@ -50,8 +51,10 @@ func video(msg *tgbotapi.Message) {
 	}
 	msgID := botMsg.MessageID
 
-	statusChan := v.Download()
-	for st := range statusChan {
+	var lastStatus interface{}
+
+	for st := range v.Download() {
+		lastStatus = st
 		var status string
 		switch st.(type) {
 		case error:
@@ -62,5 +65,15 @@ func video(msg *tgbotapi.Message) {
 
 		msgText += "\n " + status
 		bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
+	}
+
+	// We can define, was downloading success with lastStatus.(type): if type == string, downloading was success
+	switch lastStatus.(type) {
+	case string:
+		// Add into RSS feed
+		err := rss.Add(v.Author, v.Title, v.Description, v.LinkToAudio, v.DatePublished)
+		if err != nil {
+			log.Errorf("Can't add item into RSS feed: %s", err)
+		}
 	}
 }
