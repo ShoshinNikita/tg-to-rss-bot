@@ -46,7 +46,7 @@ func video(msg *tgbotapi.Message) {
 	msgText := fmt.Sprintf("Video: %s\n", v.Title)
 	botMsg, err := bot.Send(tgbotapi.NewMessage(msg.Chat.ID, msgText))
 	if err != nil {
-		log.Errorf("Can't send a message: %s", err)
+		log.Errorf("can't send a message: %s", err)
 		return
 	}
 	msgID := botMsg.MessageID
@@ -73,7 +73,7 @@ func video(msg *tgbotapi.Message) {
 		// Add into RSS feed
 		err := rss.Add(v.Author, v.Title, v.Description, v.LinkToAudio, v.DatePublished)
 		if err != nil {
-			log.Errorf("Can't add item into RSS feed: %s", err)
+			log.Errorf("can't add item into RSS feed: %s", err)
 		}
 	}
 }

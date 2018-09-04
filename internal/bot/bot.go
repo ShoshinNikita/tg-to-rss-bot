@@ -2,6 +2,7 @@ package bot
 
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/pkg/errors"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
@@ -22,7 +23,7 @@ var (
 func Init() (err error) {
 	bot, err = tgbotapi.NewBotAPI(params.BotToken)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "can't init bot")
 	}
 
 	update := tgbotapi.NewUpdate(0)
