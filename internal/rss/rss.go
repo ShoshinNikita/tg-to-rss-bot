@@ -12,7 +12,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const rssFile = "rss.json"
+const (
+	rssFolder = "rss"
+	rssFile   = "rss/rss.json"
+)
 
 var (
 	feed  = new(feeds.Feed)
@@ -20,6 +23,11 @@ var (
 )
 
 func Init() error {
+	err := os.MkdirAll(rssFolder, 0600)
+	if err != nil {
+		return errors.Wrapf(err, "Can't create folder %s", rssFolder)
+	}
+
 	f, err := os.Open(rssFile)
 	if err != nil {
 		// Need to create a file
