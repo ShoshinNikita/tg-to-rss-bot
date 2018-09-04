@@ -31,7 +31,7 @@ func NewVideo(u *url.URL) (v Video, err error) {
 	v.Description = v.videInfo.Description
 	v.DatePublished = v.videInfo.DatePublished
 	v.Author = v.videInfo.Author
-	v.LinkToAudio = dataFolder + "/" + v.videInfo.Title + ".mp4"
+	v.LinkToAudio = dataFolder + "/" + v.videInfo.Title + ".mp3"
 
 	return v, nil
 }
