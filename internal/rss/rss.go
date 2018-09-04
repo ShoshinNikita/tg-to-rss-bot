@@ -10,6 +10,8 @@ import (
 	"github.com/ShoshinNikita/log"
 	"github.com/gorilla/feeds"
 	"github.com/pkg/errors"
+
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
 const (
@@ -72,7 +74,7 @@ func Add(author, title, description, link string, created time.Time) error {
 		Created:     created,
 		Description: description,
 		Title:       title,
-		Link:        &feeds.Link{Href: link},
+		Link:        &feeds.Link{Href: params.Host + "/" + link},
 	})
 
 	// Backup

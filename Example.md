@@ -6,5 +6,6 @@ docker run --rm --name=tg-to-rss-bot \
 -v data:/app/data \
 -v rss/:/app/rss \
 -e TOKEN=SOME_TOKEN \
+-e HOST=https://SomeHost.com \
 kirtis/tg-to-rss-bot
 ```
