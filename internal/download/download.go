@@ -18,7 +18,7 @@ type Video struct {
 	Description   string
 	DatePublished time.Time
 	Author        string
-	Duration      time.Duration
+	LinkToAudio   string
 }
 
 func NewVideo(u *url.URL) (v Video, err error) {
@@ -31,7 +31,7 @@ func NewVideo(u *url.URL) (v Video, err error) {
 	v.Description = v.videInfo.Description
 	v.DatePublished = v.videInfo.DatePublished
 	v.Author = v.videInfo.Author
-	v.Duration = v.videInfo.Duration
+	v.LinkToAudio = dataFolder + "/" + v.videInfo.Title + ".mp4"
 
 	return v, nil
 }
@@ -64,14 +64,13 @@ func (v Video) Download() <-chan interface{} {
 			return
 		}
 
-		path := dataFolder + "/" + v.videInfo.Title + ".mp4"
-		if _, err := os.Open(path); err == nil {
+		if _, err := os.Open(v.LinkToAudio); err == nil {
 			responses <- errors.New("Video already exists")
 			close(responses)
 			return
 		}
 
-		f, err := os.Create(path)
+		f, err := os.Create(v.LinkToAudio)
 		if err != nil {
 			responses <- err
 			close(responses)
@@ -79,12 +78,12 @@ func (v Video) Download() <-chan interface{} {
 		}
 		defer f.Close()
 
-		responses <- "Downloading..."
+		responses <- "❕ Downloading..."
 
 		err = v.videInfo.Download(format, f)
 		if err != nil {
 			// Delete bad file
-			os.Remove(path)
+			os.Remove(v.LinkToAudio)
 			responses <- err
 			close(responses)
 			return
