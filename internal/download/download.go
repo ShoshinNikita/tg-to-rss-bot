@@ -1,6 +1,7 @@
 package download
 
 import (
+	"net/url"
 	"os"
 	"time"
 
@@ -20,9 +21,9 @@ type Video struct {
 	Duration      time.Duration
 }
 
-func NewVideo(url string) (v Video, err error) {
+func NewVideo(u *url.URL) (v Video, err error) {
 	v = Video{}
-	v.videInfo, err = ytdl.GetVideoInfo(url)
+	v.videInfo, err = ytdl.GetVideoInfo(u)
 	if err != nil {
 		return Video{}, err
 	}
@@ -63,7 +64,14 @@ func (v Video) Download() <-chan interface{} {
 			return
 		}
 
-		f, err := os.Create(dataFolder + "/" + v.videInfo.Title + ".mp4")
+		path := dataFolder + "/" + v.videInfo.Title + ".mp4"
+		if _, err := os.Open(path); err == nil {
+			responses <- errors.New("Video already exists")
+			close(responses)
+			return
+		}
+
+		f, err := os.Create(path)
 		if err != nil {
 			responses <- err
 			close(responses)
@@ -76,13 +84,13 @@ func (v Video) Download() <-chan interface{} {
 		err = v.videInfo.Download(format, f)
 		if err != nil {
 			// Delete bad file
-			os.Remove(dataFolder + "/" + v.videInfo.Title + ".mp4")
+			os.Remove(path)
 			responses <- err
 			close(responses)
 			return
 		}
 
-		responses <- "Downloading is finished"
+		responses <- "✅ Downloading is finished"
 		close(responses)
 	}()
 
