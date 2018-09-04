@@ -74,6 +74,8 @@ func video(msg *tgbotapi.Message) {
 		err := rss.Add(v.Author, v.Title, v.Description, v.LinkToAudio, v.DatePublished)
 		if err != nil {
 			log.Errorf("can't add item into RSS feed: %s", err)
+		} else {
+			log.Infof("Add new item. Title: %s\n", v.Title)
 		}
 	}
 }

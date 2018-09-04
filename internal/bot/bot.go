@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"github.com/ShoshinNikita/log"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 
@@ -48,6 +49,8 @@ func listenAndServe(updatesChan tgbotapi.UpdatesChannel) {
 }
 
 func serve(msg *tgbotapi.Message) {
+	log.Infof("User: %s ID: %d Text: %s\n", msg.Chat.UserName, msg.Chat.ID, msg.Text)
+
 	cmd := msg.Command()
 	for _, hand := range commandHandlers {
 		if hand.command == cmd {

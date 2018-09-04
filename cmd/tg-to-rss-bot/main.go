@@ -8,6 +8,8 @@ import (
 )
 
 func main() {
+	log.Infoln("Start")
+
 	err := bot.Init()
 	if err != nil {
 		log.Fatalln(err)
