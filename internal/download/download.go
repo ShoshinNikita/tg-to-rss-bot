@@ -157,6 +157,14 @@ func (v *Video) Download() <-chan Message {
 
 		videoFile.Close()
 
+		// Delete file
+		defer func() {
+			err := os.Remove(tempFilename)
+			if err != nil {
+				log.Errorf("can't delete video file %s: %s\n", tempFilename, err)
+			}
+		}()
+
 		results <- Message{Msg: "Converting..."}
 
 		ffmpeg, err := exec.LookPath("ffmpeg")
