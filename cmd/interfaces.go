@@ -1,6 +1,9 @@
 package cmd
 
-import "io"
+import (
+	"io"
+	"time"
+)
 
 type ServerInterface interface {
 	Start() error
@@ -15,7 +18,9 @@ type BotInterface interface {
 }
 
 type FeedInterface interface {
-	Add() error
+	Init() error
 
-	Write(w io.Writer)
+	Add(author, title, description, link string, created time.Time) error
+
+	Write(w io.Writer) error
 }
