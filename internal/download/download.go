@@ -1,7 +1,6 @@
 package download
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +21,13 @@ func init() {
 	if err != nil && !os.IsExist(err) {
 		log.Fatalf("can't create folder %s: %s", params.DataFolder, err)
 	}
+}
+
+type Message struct {
+	Msg string
+
+	IsFinished   bool
+	IsFatalError bool
 }
 
 type Video struct {
@@ -64,9 +70,9 @@ func transformFilename(filename string) string {
 	return string(res)
 }
 
-func (v *Video) Download() <-chan interface{} {
+func (v *Video) Download() <-chan Message {
 	url := v.video.Formats[0].Url
-	results := make(chan interface{})
+	results := make(chan Message)
 
 	go func() {
 		defer close(results)
@@ -74,32 +80,43 @@ func (v *Video) Download() <-chan interface{} {
 		tempFilename := params.DataFolder + "temp-" + v.Filename
 		videoFile, err := os.Create(tempFilename)
 		if err != nil {
-			results <- fmt.Errorf("can't create temp video file: %s", err)
+			results <- Message{
+				Msg:          "can't create temp video file: " + err.Error(),
+				IsFatalError: true,
+			}
 			return
 		}
 
 		// Get video content length
-		contentLength := func() int64 {
+		contentLength, ok := func() (int64, bool) {
 			resp, err := http.Head(url)
 			if err != nil || resp.StatusCode == 403 || resp.Header.Get("Content-Length") == "" {
-				results <- errors.New("can't define content length")
-				return -1
+				return 0, false
 			}
 
 			header := resp.Header.Get("Content-Length")
 
 			r, err := strconv.ParseInt(header, 10, 64)
 			if err != nil {
-				results <- errors.New("can't define content length")
-				return -1
+				return 0, false
 			}
 
-			return r
+			return r, true
 		}()
+		if !ok {
+			results <- Message{
+				Msg:          "can't define content length",
+				IsFatalError: true,
+			}
+			return
+		}
 
 		resp, err := http.Get(url)
 		if err != nil {
-			results <- fmt.Errorf("request failed: %s", err)
+			results <- Message{
+				Msg:          "request failed: " + err.Error(),
+				IsFatalError: true,
+			}
 			return
 		}
 		defer resp.Body.Close()
@@ -122,7 +139,7 @@ func (v *Video) Download() <-chan interface{} {
 				}
 
 				percents = 100 * offset / contentLength
-				results <- fmt.Sprintf("%d percents", percents)
+				results <- Message{Msg: fmt.Sprintf("%d percents", percents)}
 
 				if offset >= contentLength {
 					break
@@ -131,26 +148,36 @@ func (v *Video) Download() <-chan interface{} {
 		}()
 
 		if _, err = io.Copy(videoFile, resp.Body); err != nil {
-			results <- fmt.Errorf("can't download video file: %s", err)
+			results <- Message{
+				Msg:          "an't download video file: " + err.Error(),
+				IsFatalError: true,
+			}
 			return
 		}
 
 		videoFile.Close()
 
-		results <- "Converting..."
+		results <- Message{Msg: "Converting..."}
 
 		ffmpeg, err := exec.LookPath("ffmpeg")
 		if err != nil {
-			results <- fmt.Errorf("can't find ffmpeg: %s", err)
+			results <- Message{
+				Msg:          "can't find ffmpeg: " + err.Error(),
+				IsFatalError: true,
+			}
 			return
 		}
 
 		cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", tempFilename, "-vn", params.DataFolder+v.Filename)
 		if err := cmd.Run(); err != nil {
-			results <- fmt.Errorf("ffmpeg exit with error: %s", err)
+			results <- Message{
+				Msg:          "ffmpeg exit with error: " + err.Error(),
+				IsFatalError: true,
+			}
+			return
 		}
 
-		results <- "Done"
+		results <- Message{Msg: "Done", IsFinished: true}
 	}()
 
 	return results

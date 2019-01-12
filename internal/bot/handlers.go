@@ -52,29 +52,34 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		log.Errorf("can't send a message: %s", err)
 		return
 	}
+
 	msgID := botMsg.MessageID
 
-	var lastStatus interface{}
-
-	for st := range v.Download() {
-		lastStatus = st
-		var status string
-		switch st.(type) {
-		case error:
-			status = "❌ " + st.(error).Error()
-		case string:
-			status = st.(string)
+	var status string
+	var ok bool
+	for m := range v.Download() {
+		switch {
+		case m.IsFatalError:
+			ok = false
+			status = "❌ " + m.Msg
+		case m.IsFinished:
+			ok = true
+			status = "✅ " + m.Msg
+		default:
+			status = m.Msg
 		}
 
 		msgText += "\n " + status
 		b.bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
+
+		if m.IsFatalError || m.IsFinished {
+			break
+		}
 	}
 
-	audioLink := params.DataFolder + v.Filename
-	// We can define, was downloading success with lastStatus.(type): if type == string, downloading was success
-	switch lastStatus.(type) {
-	case string:
+	if ok {
 		// Add into feed
+		audioLink := params.DataFolder + v.Filename
 		err := b.feed.Add(v.Author, v.Title, v.Description, audioLink, time.Now())
 		if err != nil {
 			log.Errorf("can't add item into RSS feed: %s", err)
