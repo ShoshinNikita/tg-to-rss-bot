@@ -1,4 +1,5 @@
 .vscode
 build/tg-to-rss-bot
 data
+rss
 *.bat
