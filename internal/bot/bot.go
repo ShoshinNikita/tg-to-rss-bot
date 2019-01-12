@@ -2,27 +2,31 @@ package bot
 
 import (
 	"github.com/ShoshinNikita/log"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 
+	"github.com/ShoshinNikita/tg-to-rss-bot/cmd"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
-var (
-	bot *tgbotapi.BotAPI
+type Bot struct {
+	bot  *tgbotapi.BotAPI
+	feed cmd.FeedInterface
 
-	commandHandlers = []struct {
-		command string
-		handler func(*tgbotapi.Message)
-	}{
-		{"start", start},
-		{"help", help},
-		{"", video},
+	shutdownReq  chan struct{}
+	shutdownResp chan struct{}
+}
+
+func NewBot(feed cmd.FeedInterface) *Bot {
+	return &Bot{
+		feed:         feed,
+		shutdownReq:  make(chan struct{}),
+		shutdownResp: make(chan struct{}),
 	}
-)
+}
 
-func Init() (err error) {
-	bot, err = tgbotapi.NewBotAPI(params.BotToken)
+func (b *Bot) Start() (err error) {
+	b.bot, err = tgbotapi.NewBotAPI(params.BotToken)
 	if err != nil {
 		return errors.Wrap(err, "can't init bot")
 	}
@@ -30,34 +34,51 @@ func Init() (err error) {
 	update := tgbotapi.NewUpdate(0)
 	update.Timeout = 60
 
-	updatesChan, err := bot.GetUpdatesChan(update)
+	updatesChan, err := b.bot.GetUpdatesChan(update)
 	if err != nil {
 		return err
 	}
 
-	go listenAndServe(updatesChan)
+	go b.listenAndServe(updatesChan)
 
 	return nil
 }
 
-func listenAndServe(updatesChan tgbotapi.UpdatesChannel) {
-	for update := range updatesChan {
-		if update.Message != nil {
-			go serve(update.Message)
+func (b *Bot) listenAndServe(updatesChan tgbotapi.UpdatesChannel) {
+	for {
+		select {
+		case update := <-updatesChan:
+			if update.Message != nil {
+				go b.serve(update.Message)
+			}
+		case <-b.shutdownReq:
+			close(b.shutdownResp)
+			return
 		}
 	}
 }
 
-func serve(msg *tgbotapi.Message) {
+func (b *Bot) serve(msg *tgbotapi.Message) {
 	log.Infof("User: %s ID: %d Text: %s\n", msg.Chat.UserName, msg.Chat.ID, msg.Text)
 
 	cmd := msg.Command()
-	for _, hand := range commandHandlers {
-		if hand.command == cmd {
-			hand.handler(msg)
-			return
-		}
+	switch cmd {
+	case "start":
+		b.start(msg)
+	case "help":
+		b.help(msg)
+	case "link":
+		b.sendLink(msg)
+	case "":
+		b.video(msg)
+	default:
+		b.wrongCommand(msg)
 	}
+}
 
-	wrongCommand(msg)
+func (b *Bot) Shutdown() error {
+	close(b.shutdownReq)
+	<-b.shutdownResp
+
+	return nil
 }

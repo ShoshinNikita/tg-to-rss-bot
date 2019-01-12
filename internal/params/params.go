@@ -6,6 +6,12 @@ import (
 	"github.com/ShoshinNikita/log"
 )
 
+const (
+	DataFolder = "data/"
+	RssFolder  = "rss/"
+	RssFile    = "rss/rss.xml"
+)
+
 var (
 	// BotToken is a token for Telegram bot
 	BotToken string

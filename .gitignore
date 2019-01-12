@@ -1,4 +1,6 @@
-.vscode
+.vscode/
 build/tg-to-rss-bot
-data
+data/
+rss/
+ffmpeg.exe
 *.bat

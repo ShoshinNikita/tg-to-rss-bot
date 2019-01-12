@@ -1,6 +1,6 @@
 FROM alpine
 RUN apk update && \
-	apk add ca-certificates && \
+	apk add ca-certificates ffmpeg && \
 	update-ca-certificates
 RUN mkdir /app
 WORKDIR /app
