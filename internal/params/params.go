@@ -6,6 +6,10 @@ import (
 	"github.com/ShoshinNikita/log"
 )
 
+const (
+	DataFolder = "data/"
+)
+
 var (
 	// BotToken is a token for Telegram bot
 	BotToken string

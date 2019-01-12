@@ -13,15 +13,14 @@ import (
 	"unicode"
 
 	"github.com/ShoshinNikita/log"
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 	"github.com/knadh/go-get-youtube/youtube"
 )
 
-const dataFolder = "data/"
-
 func init() {
-	err := os.Mkdir(dataFolder, 0666)
+	err := os.Mkdir(params.DataFolder, 0666)
 	if err != nil && !os.IsExist(err) {
-		log.Fatalf("can't create folder %s: %s", dataFolder, err)
+		log.Fatalf("can't create folder %s: %s", params.DataFolder, err)
 	}
 }
 
@@ -72,7 +71,7 @@ func (v *Video) Download() <-chan interface{} {
 	go func() {
 		defer close(results)
 
-		tempFilename := dataFolder + "temp-" + v.Filename
+		tempFilename := params.DataFolder + "temp-" + v.Filename
 		videoFile, err := os.Create(tempFilename)
 		if err != nil {
 			results <- fmt.Errorf("can't create temp video file: %s", err)
@@ -146,7 +145,7 @@ func (v *Video) Download() <-chan interface{} {
 			return
 		}
 
-		cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", tempFilename, "-vn", dataFolder+v.Filename)
+		cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", tempFilename, "-vn", params.DataFolder+v.Filename)
 		if err := cmd.Run(); err != nil {
 			results <- fmt.Errorf("ffmpeg exit with error: %s", err)
 		}

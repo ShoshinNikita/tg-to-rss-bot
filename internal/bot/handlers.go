@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ShoshinNikita/log"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/download"
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
 func (b *Bot) start(msg *tgbotapi.Message) {
@@ -32,12 +34,14 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 
 	u, err := url.ParseRequestURI(stringURL)
 	if err != nil {
+		log.Errorf("can't parse url %s: %s\n", stringURL, err)
 		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link"))
 		return
 	}
 
 	v, err := download.NewVideo(u)
 	if err != nil {
+		log.Errorf("can't get video info %s: %s\n", stringURL, err)
 		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link to a video"))
 		return
 	}
@@ -66,11 +70,12 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		b.bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
 	}
 
+	audioLink := params.DataFolder + v.Filename
 	// We can define, was downloading success with lastStatus.(type): if type == string, downloading was success
 	switch lastStatus.(type) {
 	case string:
 		// Add into feed
-		err := b.feed.Add(v.Author, v.Title, v.Description, v.LinkToAudio, v.DatePublished)
+		err := b.feed.Add(v.Author, v.Title, v.Description, audioLink, time.Now())
 		if err != nil {
 			log.Errorf("can't add item into RSS feed: %s", err)
 		} else {
