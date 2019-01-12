@@ -27,6 +27,7 @@ func (b *Bot) wrongCommand(msg *tgbotapi.Message) {
 
 func (b *Bot) video(msg *tgbotapi.Message) {
 	stringURL := msg.Text
+
 	// Add http:// or https://
 	if !(strings.HasPrefix(stringURL, "http://") || strings.HasPrefix(stringURL, "https://")) {
 		stringURL = "https://" + stringURL
@@ -34,29 +35,27 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 
 	u, err := url.ParseRequestURI(stringURL)
 	if err != nil {
-		log.Errorf("can't parse url %s: %s\n", stringURL, err)
-		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link"))
+		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ invalid link"))
 		return
 	}
 
 	v, err := download.NewVideo(u)
 	if err != nil {
-		log.Errorf("can't get video info %s: %s\n", stringURL, err)
-		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link to a video"))
+		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ invalid link to a video"))
 		return
 	}
 
 	msgText := fmt.Sprintf("Video: %s\n", v.Title)
 	botMsg, err := b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, msgText))
+	// Check error because we will use botMsg.MessageID
 	if err != nil {
-		log.Errorf("can't send a message: %s", err)
+		log.Errorf("can't send a message: %s\n", err)
 		return
 	}
 
 	msgID := botMsg.MessageID
-
-	var status string
-	var ok bool
+	status := ""
+	ok := false
 	for m := range v.Download() {
 		switch {
 		case m.IsFatalError:
@@ -66,7 +65,7 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 			ok = true
 			status = "✅ " + m.Msg
 		default:
-			status = m.Msg
+			status = "* " + m.Msg
 		}
 
 		msgText += "\n " + status
@@ -82,9 +81,9 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		audioLink := params.DataFolder + v.Filename
 		err := b.feed.Add(v.Author, v.Title, v.Description, audioLink, time.Now())
 		if err != nil {
-			log.Errorf("can't add item into RSS feed: %s", err)
+			log.Errorf("can't add item into RSS feed: %s\n", err)
 		} else {
-			log.Infof("Add new item. Title: %s\n", v.Title)
+			log.Infof("add new item. Title: \"%s\"\n", v.Title)
 		}
 	}
 }
