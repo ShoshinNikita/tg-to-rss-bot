@@ -67,6 +67,8 @@ func (b *Bot) serve(msg *tgbotapi.Message) {
 		b.start(msg)
 	case "help":
 		b.help(msg)
+	case "link":
+		b.sendLink(msg)
 	case "":
 		b.video(msg)
 	default:

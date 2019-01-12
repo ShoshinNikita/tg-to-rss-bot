@@ -13,12 +13,23 @@ import (
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
+const helpMsg = `It is a bot, that adds received videos from YouTube into RSS feed
+Commands:
+/help – get help
+/link – get link to RSS feed
+
+Bot repo: https://github.com/ShoshinNikita/tg-to-rss-bot`
+
 func (b *Bot) start(msg *tgbotapi.Message) {
 	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "For start send link to a YouTube video"))
 }
 
 func (b *Bot) help(msg *tgbotapi.Message) {
-	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "It is a bot, that adds received videos from YouTube into RSS feed"))
+	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, helpMsg))
+}
+
+func (b *Bot) sendLink(msg *tgbotapi.Message) {
+	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, params.Host+"/feed"))
 }
 
 func (b *Bot) wrongCommand(msg *tgbotapi.Message) {
