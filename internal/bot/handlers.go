@@ -6,25 +6,25 @@ import (
 	"strings"
 
 	"github.com/ShoshinNikita/log"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/download"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/rss"
 )
 
-func start(msg *tgbotapi.Message) {
-	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "For start send link to a YouTube video"))
+func (b *Bot) start(msg *tgbotapi.Message) {
+	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "For start send link to a YouTube video"))
 }
 
-func help(msg *tgbotapi.Message) {
-	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "It is a bot, that adds received videos from YouTube into RSS feed"))
+func (b *Bot) help(msg *tgbotapi.Message) {
+	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "It is a bot, that adds received videos from YouTube into RSS feed"))
 }
 
-func wrongCommand(msg *tgbotapi.Message) {
-	bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: wrong command"))
+func (b *Bot) wrongCommand(msg *tgbotapi.Message) {
+	b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: wrong command"))
 }
 
-func video(msg *tgbotapi.Message) {
+func (b *Bot) video(msg *tgbotapi.Message) {
 	stringURL := msg.Text
 	// Add http:// or https://
 	if !(strings.HasPrefix(stringURL, "http://") || strings.HasPrefix(stringURL, "https://")) {
@@ -33,18 +33,18 @@ func video(msg *tgbotapi.Message) {
 
 	u, err := url.ParseRequestURI(stringURL)
 	if err != nil {
-		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link"))
+		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link"))
 		return
 	}
 
 	v, err := download.NewVideo(u)
 	if err != nil {
-		bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link to a video"))
+		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "Error: invalid link to a video"))
 		return
 	}
 
 	msgText := fmt.Sprintf("Video: %s\n", v.Title)
-	botMsg, err := bot.Send(tgbotapi.NewMessage(msg.Chat.ID, msgText))
+	botMsg, err := b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, msgText))
 	if err != nil {
 		log.Errorf("can't send a message: %s", err)
 		return
@@ -64,7 +64,7 @@ func video(msg *tgbotapi.Message) {
 		}
 
 		msgText += "\n " + status
-		bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
+		b.bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
 	}
 
 	// We can define, was downloading success with lastStatus.(type): if type == string, downloading was success
