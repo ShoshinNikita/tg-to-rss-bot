@@ -16,18 +16,12 @@ import (
 	"github.com/knadh/go-get-youtube/youtube"
 )
 
+// init creates params.DataFolder
 func init() {
 	err := os.Mkdir(params.DataFolder, 0666)
 	if err != nil && !os.IsExist(err) {
 		log.Fatalf("can't create folder %s: %s", params.DataFolder, err)
 	}
-}
-
-type Message struct {
-	Msg string
-
-	IsFinished   bool
-	IsFatalError bool
 }
 
 type Video struct {
@@ -55,6 +49,7 @@ func NewVideo(u *url.URL) (*Video, error) {
 	}, nil
 }
 
+// transformFilename remove non-letter and non-digit runes and replace spaces with '-'
 func transformFilename(filename string) string {
 	res := make([]rune, 0, len(filename))
 
@@ -70,6 +65,16 @@ func transformFilename(filename string) string {
 	return string(res)
 }
 
+// Message is used in Download function
+type Message struct {
+	Msg string
+
+	IsFinished   bool
+	IsFatalError bool
+}
+
+// Download downloads video.
+// The last Message has IsFinished == true or IsFatalError == true
 func (v *Video) Download() <-chan Message {
 	url := v.video.Formats[0].Url
 	results := make(chan Message)
@@ -133,13 +138,13 @@ func (v *Video) Download() <-chan Message {
 			)
 
 			for range ticker.C {
-				offset, err = videoFile.Seek(0, os.SEEK_CUR)
+				offset, err = videoFile.Seek(0, io.SeekCurrent)
 				if err != nil {
-					return
+					break
 				}
 
 				percents = 100 * offset / contentLength
-				results <- Message{Msg: fmt.Sprintf("%d percents", percents)}
+				results <- Message{Msg: fmt.Sprintf("%d%%", percents)}
 
 				if offset >= contentLength {
 					break
@@ -149,7 +154,7 @@ func (v *Video) Download() <-chan Message {
 
 		if _, err = io.Copy(videoFile, resp.Body); err != nil {
 			results <- Message{
-				Msg:          "an't download video file: " + err.Error(),
+				Msg:          "can't download video file: " + err.Error(),
 				IsFatalError: true,
 			}
 			return
@@ -157,7 +162,7 @@ func (v *Video) Download() <-chan Message {
 
 		videoFile.Close()
 
-		// Delete file
+		// Delete file after converting
 		defer func() {
 			err := os.Remove(tempFilename)
 			if err != nil {
