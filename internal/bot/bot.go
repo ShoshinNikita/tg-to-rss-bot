@@ -5,18 +5,20 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/pkg/errors"
 
+	"github.com/ShoshinNikita/tg-to-rss-bot/cmd"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
 type Bot struct {
-	bot *tgbotapi.BotAPI
+	bot  *tgbotapi.BotAPI
+	feed cmd.FeedInterface
 
 	shutdownReq  chan struct{}
 	shutdownResp chan struct{}
 }
 
-func NewBot() *Bot {
-	return &Bot{}
+func NewBot(feed cmd.FeedInterface) *Bot {
+	return &Bot{feed: feed}
 }
 
 func (b *Bot) Start() (err error) {
