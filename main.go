@@ -20,6 +20,9 @@ type App struct {
 }
 
 func main() {
+	log.PrintTime(true)
+	log.PrintColor(true)
+
 	log.Infoln("Start")
 
 	app := &App{}
