@@ -18,7 +18,11 @@ type Bot struct {
 }
 
 func NewBot(feed cmd.FeedInterface) *Bot {
-	return &Bot{feed: feed}
+	return &Bot{
+		feed:         feed,
+		shutdownReq:  make(chan struct{}),
+		shutdownResp: make(chan struct{}),
+	}
 }
 
 func (b *Bot) Start() (err error) {
