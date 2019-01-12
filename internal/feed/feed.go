@@ -7,16 +7,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ShoshinNikita/log"
 	"github.com/gorilla/feeds"
 	"github.com/pkg/errors"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
-const (
-	rssFolder = "rss"
-	rssFile   = "rss/rss.xml"
-)
+// init create params.RssFolder
+func init() {
+	err := os.MkdirAll(params.RssFolder, 0666)
+	if err != nil {
+		log.Fatal("can't create folder %s: %s", params.RssFolder, err)
+	}
+}
 
 type Feed struct {
 	feed  *feeds.RssFeed
@@ -31,17 +35,12 @@ func NewFeed() *Feed {
 }
 
 func (feed *Feed) Init() error {
-	err := os.MkdirAll(rssFolder, 0666)
-	if err != nil {
-		return errors.Wrapf(err, "can't create folder %s", rssFolder)
-	}
-
-	f, err := os.Open(rssFile)
+	f, err := os.Open(params.RssFile)
 	if err != nil {
 		// Need to create a file
-		f, err = os.Create(rssFile)
+		f, err = os.Create(params.RssFile)
 		if err != nil {
-			return errors.Wrapf(err, "can't create a new file %s", rssFile)
+			return errors.Wrapf(err, "can't create a new file %s", params.RssFile)
 		}
 		defer f.Close()
 
@@ -83,9 +82,9 @@ func (feed *Feed) Add(author, title, description, filepath string, created time.
 	feed.feed.Items = append(feed.feed.Items, item)
 
 	// Write into disk
-	f, err := os.OpenFile(rssFile, os.O_RDWR|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(params.RssFile, os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
-		return errors.Wrapf(err, "can't open file %s", rssFile)
+		return errors.Wrapf(err, "can't open file %s", params.RssFile)
 	}
 	defer f.Close()
 

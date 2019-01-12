@@ -8,6 +8,8 @@ import (
 
 const (
 	DataFolder = "data/"
+	RssFolder  = "rss/"
+	RssFile    = "rss/rss.xml"
 )
 
 var (
