@@ -2,5 +2,6 @@
 build/tg-to-rss-bot
 data/
 rss/
+ssl/
 ffmpeg.exe
 *.bat
