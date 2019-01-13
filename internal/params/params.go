@@ -17,6 +17,7 @@ var (
 	BotToken string
 	// Host serves for creating link to audio (for example, "http://1.1.1.1")
 	Host string
+	TLS  bool
 )
 
 func init() {
@@ -25,4 +26,7 @@ func init() {
 	if Host == "" {
 		log.Fatal("HOST can't be empty")
 	}
+
+	// true by default
+	TLS = os.Getenv("TLS") != "false"
 }

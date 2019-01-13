@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ShoshinNikita/tg-to-rss-bot/cmd"
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
 )
 
 const address = ":80"
@@ -28,7 +29,15 @@ func (s *Server) Start() error {
 	mux.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data/"))))
 
 	s.server = &http.Server{Addr: address, Handler: mux}
-	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+
+	listenAndServe := s.server.ListenAndServe
+	if params.TLS {
+		listenAndServe = func() error {
+			return s.server.ListenAndServeTLS("ssl/cert.cert", "ssl/key.key")
+		}
+	}
+
+	if err := listenAndServe(); err != nil && err != http.ErrServerClosed {
 		return err
 	}
 
