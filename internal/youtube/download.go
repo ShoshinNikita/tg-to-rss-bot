@@ -11,7 +11,6 @@ import (
 
 	"github.com/ShoshinNikita/log"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
-	"github.com/knadh/go-get-youtube/youtube"
 )
 
 // init creates params.DataFolder
@@ -23,12 +22,13 @@ func init() {
 }
 
 type Video struct {
-	Author      string
-	Title       string
-	Filename    string
-	Description string
+	Author       string
+	Title        string
+	Filename     string
+	Description  string
+	ThumbnailURL string
 
-	video *youtube.Video
+	downloadURL string
 }
 
 func NewVideo(id string) (*Video, error) {
@@ -43,10 +43,9 @@ type Message struct {
 	IsFatalError bool
 }
 
-// Download downloads video.
+// Download downloads video and thumbnail
 // The last Message has IsFinished == true or IsFatalError == true
 func (v *Video) Download() <-chan Message {
-	url := v.video.Formats[0].Url
 	results := make(chan Message)
 
 	go func() {
@@ -64,7 +63,7 @@ func (v *Video) Download() <-chan Message {
 
 		// Get video content length
 		contentLength, ok := func() (int64, bool) {
-			resp, err := http.Head(url)
+			resp, err := http.Head(v.downloadURL)
 			if err != nil || resp.StatusCode == 403 || resp.Header.Get("Content-Length") == "" {
 				return 0, false
 			}
@@ -86,7 +85,7 @@ func (v *Video) Download() <-chan Message {
 			return
 		}
 
-		resp, err := http.Get(url)
+		resp, err := http.Get(v.downloadURL)
 		if err != nil {
 			results <- Message{
 				Msg:          "request failed: " + err.Error(),
