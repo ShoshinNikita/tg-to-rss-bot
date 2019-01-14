@@ -59,6 +59,12 @@ func (b *Bot) listenAndServe(updatesChan tgbotapi.UpdatesChannel) {
 }
 
 func (b *Bot) serve(msg *tgbotapi.Message) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorln(r)
+		}
+	}()
+
 	log.Infof("User: %s ID: %d Text: %s\n", msg.Chat.UserName, msg.Chat.ID, msg.Text)
 
 	cmd := msg.Command()
