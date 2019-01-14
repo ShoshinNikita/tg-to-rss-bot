@@ -50,7 +50,8 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		return
 	}
 
-	v, err := download.NewVideo(u)
+	id := u.Query().Get("v")
+	v, err := download.NewVideo(id)
 	if err != nil {
 		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ invalid link to a video"))
 		return

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -33,8 +32,7 @@ type Video struct {
 	video *youtube.Video
 }
 
-func NewVideo(u *url.URL) (*Video, error) {
-	id := u.Query().Get("v")
+func NewVideo(id string) (*Video, error) {
 	video, err := youtube.Get(id)
 	if err != nil {
 		return nil, err
