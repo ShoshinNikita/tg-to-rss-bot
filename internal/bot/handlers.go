@@ -64,7 +64,9 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 
 	v, err := youtube.NewVideo(id)
 	if err != nil {
-		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ invalid link to a video"))
+		log.Errorf("can't process video with ID \"%s\": %s\n", id, err)
+
+		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ can't get video meta data: "+err.Error()))
 		return
 	}
 
@@ -105,8 +107,14 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		err := b.feed.Add(v.Author, v.Title, v.Description, audioLink, time.Now())
 		if err != nil {
 			log.Errorf("can't add item into RSS feed: %s\n", err)
+
+			msgText += "\n " + "❌ can't add item into RSS feed: " + err.Error()
+			b.bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
 		} else {
 			log.Infof("add new item. Title: \"%s\"\n", v.Title)
+
+			msgText += "\n " + "✅ add new item into RSS feed"
+			b.bot.Send(tgbotapi.NewEditMessageText(msg.Chat.ID, msgID, msgText))
 		}
 	}
 }

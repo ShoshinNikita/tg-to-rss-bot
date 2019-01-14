@@ -159,7 +159,7 @@ func (v *Video) Download() <-chan Message {
 			return
 		}
 
-		results <- Message{Msg: "Done", IsFinished: true}
+		results <- Message{Msg: "done", IsFinished: true}
 	}()
 
 	return results
