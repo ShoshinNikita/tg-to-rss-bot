@@ -31,7 +31,7 @@ func getVideoInfo(id string) (*Video, error) {
 	v.Author = query.Get("author")
 	v.Title = query.Get("title")
 	v.Filename = transformFilename(v.Title) + ".mp3"
-	v.Description = v.Author + " - " + v.Title
+	v.Description = fmt.Sprintf("%s - %s (https://www.youtube.com/watch?v=%s)", v.Author, v.Title, id)
 	v.ThumbnailURL = fmt.Sprintf(thumbnailURL, id)
 
 	formats := strings.Split(query.Get("url_encoded_fmt_stream_map"), ",")
