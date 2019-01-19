@@ -9,8 +9,8 @@ import (
 	"github.com/ShoshinNikita/log"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
-	"github.com/ShoshinNikita/tg-to-rss-bot/internal/download"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
+	"github.com/ShoshinNikita/tg-to-rss-bot/internal/youtube"
 )
 
 const helpMsg = `It is a bot, that adds received videos from YouTube into RSS feed
@@ -62,7 +62,7 @@ func (b *Bot) video(msg *tgbotapi.Message) {
 		return s[len(s)-1]
 	}()
 
-	v, err := download.NewVideo(id)
+	v, err := youtube.NewVideo(id)
 	if err != nil {
 		b.bot.Send(tgbotapi.NewMessage(msg.Chat.ID, "❌ invalid link to a video"))
 		return

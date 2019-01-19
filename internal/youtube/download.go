@@ -1,4 +1,4 @@
-package download
+package youtube
 
 import (
 	"fmt"
@@ -8,11 +8,9 @@ import (
 	"os/exec"
 	"strconv"
 	"time"
-	"unicode"
 
 	"github.com/ShoshinNikita/log"
 	"github.com/ShoshinNikita/tg-to-rss-bot/internal/params"
-	"github.com/knadh/go-get-youtube/youtube"
 )
 
 // init creates params.DataFolder
@@ -24,43 +22,17 @@ func init() {
 }
 
 type Video struct {
-	Author      string
-	Title       string
-	Filename    string
-	Description string
+	Author       string
+	Title        string
+	Filename     string
+	Description  string
+	ThumbnailURL string
 
-	video *youtube.Video
+	downloadURL string
 }
 
 func NewVideo(id string) (*Video, error) {
-	video, err := youtube.Get(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Video{
-		Author:      video.Author,
-		Title:       video.Title,
-		Filename:    transformFilename(video.Title) + ".mp3",
-		Description: video.Author + " - " + video.Title,
-		video:       &video,
-	}, nil
-}
-
-// transformFilename remove non-letter and non-digit runes and replace spaces with '-'
-func transformFilename(filename string) string {
-	res := make([]rune, 0, len(filename))
-
-	for _, r := range filename {
-		switch {
-		case unicode.IsLetter(r) || unicode.IsDigit(r):
-			res = append(res, unicode.ToLower(r))
-		case r == ' ':
-			res = append(res, '-')
-		}
-	}
-
-	return string(res)
+	return getVideoInfo(id)
 }
 
 // Message is used in Download function
@@ -71,10 +43,9 @@ type Message struct {
 	IsFatalError bool
 }
 
-// Download downloads video.
+// Download downloads video and thumbnail
 // The last Message has IsFinished == true or IsFatalError == true
 func (v *Video) Download() <-chan Message {
-	url := v.video.Formats[0].Url
 	results := make(chan Message)
 
 	go func() {
@@ -92,7 +63,7 @@ func (v *Video) Download() <-chan Message {
 
 		// Get video content length
 		contentLength, ok := func() (int64, bool) {
-			resp, err := http.Head(url)
+			resp, err := http.Head(v.downloadURL)
 			if err != nil || resp.StatusCode == 403 || resp.Header.Get("Content-Length") == "" {
 				return 0, false
 			}
@@ -114,7 +85,7 @@ func (v *Video) Download() <-chan Message {
 			return
 		}
 
-		resp, err := http.Get(url)
+		resp, err := http.Get(v.downloadURL)
 		if err != nil {
 			results <- Message{
 				Msg:          "request failed: " + err.Error(),
