@@ -1,7 +1,7 @@
 import os
 import shutil
 
-version = "1.1.0"
+version = "1.2.0"
 
 os.environ["GOOS"] = "linux"
 os.environ["GOARCH"] = "amd64"
