@@ -12,7 +12,7 @@ Telegram bot, that adds received videos from YouTube into RSS feed.
 | ----- | ------- | -------- | ---------------------------------------------------------- |
 | TOKEN | ""      | yes      | Telegram bot token                                         |
 | HOST  | ""      | yes      | Host for creating links in RSS feed ($HOST/data/audio.mp3) |
-| TLS   | true    | no       | If it is true, server will use `https` (default behavior)  |
+| TLS   | false   | no       | If it is true, server will use `https`                     |
 
 ## Example of run script
 

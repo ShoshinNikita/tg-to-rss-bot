@@ -27,6 +27,6 @@ func init() {
 		log.Fatal("HOST can't be empty")
 	}
 
-	// true by default
-	TLS = os.Getenv("TLS") != "false"
+	// false by default
+	TLS = os.Getenv("TLS") == "true"
 }
